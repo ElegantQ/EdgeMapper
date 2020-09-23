@@ -1,0 +1,13 @@
+server:
+  port: 9090
+
+mqtt:
+  mode: 0
+  server: tcp://10.28.246.190:1883
+  internal-server: tcp://10.28.246.190:1884
+  client-id: eventbus
+  cleanSession: true
+  connectionTimeout: 5
+  keepAliveInterval: 20
+
+
