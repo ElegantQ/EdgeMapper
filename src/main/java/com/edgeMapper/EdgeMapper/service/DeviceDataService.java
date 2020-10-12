@@ -6,5 +6,7 @@ import com.edgeMapper.EdgeMapper.model.DeviceDto;
  * Created by huqiaoqian on 2020/9/23
  */
 public interface DeviceDataService {
-    void processMsg(DeviceDto deviceDto);
+    public void processMsg(DeviceDto deviceDto);
+
+    public void receiveData(byte[] data);
 }

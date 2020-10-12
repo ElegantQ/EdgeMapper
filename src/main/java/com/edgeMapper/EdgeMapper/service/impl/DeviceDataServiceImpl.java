@@ -32,4 +32,10 @@ public class DeviceDataServiceImpl implements DeviceDataService {
             log.error("推送mq实时数据异常",e);
         }
     }
+
+    @Override
+    public void receiveData(byte[] data) {
+        DeviceDto deviceDto=new DeviceDto();
+
+    }
 }
