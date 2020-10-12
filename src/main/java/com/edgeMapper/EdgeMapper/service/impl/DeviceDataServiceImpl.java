@@ -36,6 +36,5 @@ public class DeviceDataServiceImpl implements DeviceDataService {
     @Override
     public void receiveData(byte[] data) {
         DeviceDto deviceDto=new DeviceDto();
-
     }
 }
