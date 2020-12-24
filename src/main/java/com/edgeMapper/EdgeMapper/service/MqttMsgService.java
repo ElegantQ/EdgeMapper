@@ -7,4 +7,9 @@ import com.google.gson.JsonObject;
  */
 public interface MqttMsgService {
     public void updateDeviceTwin(String deviceName, JsonObject data);
+
+    public void launchOrder(String order);
+
+    public void transferBleGatewayData(String data);
+
 }

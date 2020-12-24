@@ -1,4 +1,4 @@
-package com.edgeMapper.EdgeMapper.model;
+package com.edgeMapper.EdgeMapper.model.dto;
 
 import lombok.Data;
 

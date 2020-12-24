@@ -1,4 +1,4 @@
-package com.edgeMapper.EdgeMapper.transfer.netty;
+package com.edgeMapper.EdgeMapper.netty;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
