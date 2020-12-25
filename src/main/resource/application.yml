@@ -56,7 +56,7 @@ rocketmq:
     isOnOff: on
     groupName: device-data-consumer
     namesrvAddr: 121.36.70.254:9876
-    topics: walks-bodyInfo,*
+    topics: walks-bodyInfo,heart-beats,*
     consumeThreadMin: 5
     consumeThreadMax: 32
     consumeMessageBatchMaxSize: 1

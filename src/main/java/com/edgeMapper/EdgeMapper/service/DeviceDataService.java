@@ -18,4 +18,6 @@ public interface DeviceDataService {
     public void setWalkCounts(BodyInfoDto bodyInfoDto);
 
     public void getHeartBeats();
+
+    public void openHeartBeatsTest();
 }

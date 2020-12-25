@@ -97,7 +97,7 @@ public class MqttMsgServiceImpl implements MqttMsgService {
                     this.handleBleWatchPower(data.substring(8,10));
                     break;
                 case "86"://心率、步数、里程、热量、步速
-                    this.handleHeartBeats(data.substring(8,36));
+                    this.handleHeartBeats(data.substring(4,36));
                 case "03":
                     break;
                 default:
@@ -120,33 +120,41 @@ public class MqttMsgServiceImpl implements MqttMsgService {
         deviceDataService.processMsg(deviceDto);
     }
     private void handleHeartBeats(String data){
-        int cur=0;
-        int heartBeats=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
-        int speed=(data.charAt(cur++)-'0')*16+data.charAt(cur)-'0';
-        int walkCounts=0,miles=0,calolis=0;
-        for(int i=0;i<3;i++){
-            for(int j=0;j<8;j++){
-            switch (i){
-                case 0:walkCounts+=walkCounts*16+data.charAt(cur++)-'0';
-                break;
-                case 1:calolis+=calolis*16+data.charAt(cur++)-'0';
-                break;
-                case 2:miles+=miles*16+data.charAt(cur++)-'0';
-                break;
-                default:break;
-            }
-            }
+        //68 86 01 00 01 ee 16
+        String pre=data.substring(4,10);
+        if(pre.equals("010001")){
+            System.out.print("手环开启心率测试成功！！");
         }
-        DeviceDto deviceDto = new DeviceDto();
-        Map<String,String> properties = new HashMap<>();
-        properties.put("heartBeats",String.valueOf(heartBeats));
-        properties.put("walkCounts",String.valueOf(walkCounts));
-        properties.put("miles",String.valueOf(miles));
-        properties.put("calolis",String.valueOf(calolis));
-        properties.put("speed",String.valueOf(speed));
-        deviceDto.setDeviceName("ble-watch");
-        deviceDto.setProperties(properties);
-        log.info("发送手环实时数据（心率、步数、里程、热量、步速）{}",deviceDto);
-        deviceDataService.processMsg(deviceDto);
+        else{
+            int cur=4;
+            int heartBeats=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
+            int speed=(data.charAt(cur++)-'0')*16+data.charAt(cur)-'0';
+            int walkCounts=0,miles=0,calolis=0;
+            for(int i=0;i<3;i++){
+                for(int j=0;j<8;j++){
+                    switch (i){
+                        case 0:walkCounts+=walkCounts*16+data.charAt(cur++)-'0';
+                            break;
+                        case 1:calolis+=calolis*16+data.charAt(cur++)-'0';
+                            break;
+                        case 2:miles+=miles*16+data.charAt(cur++)-'0';
+                            break;
+                        default:break;
+                    }
+                }
+            }
+            DeviceDto deviceDto = new DeviceDto();
+            Map<String,String> properties = new HashMap<>();
+            properties.put("heartBeats",String.valueOf(heartBeats));
+            properties.put("walkCounts",String.valueOf(walkCounts));
+            properties.put("miles",String.valueOf(miles));
+            properties.put("calolis",String.valueOf(calolis));
+            properties.put("speed",String.valueOf(speed));
+            deviceDto.setDeviceName("ble-watch");
+            deviceDto.setProperties(properties);
+            log.info("发送手环实时数据（心率、步数、里程、热量、步速）{}",deviceDto);
+            deviceDataService.processMsg(deviceDto);
+        }
+
     }
 }

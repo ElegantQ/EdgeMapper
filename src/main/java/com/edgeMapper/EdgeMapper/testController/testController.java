@@ -87,4 +87,11 @@ public class testController {
 
         return ruleMapper.insert1(rule);
     }
+
+    @PostMapping("/openHeartBeatsTest")
+    @ApiOperation("打开心率测试")
+    public void openHeartBeatsTest(){
+
+        deviceDataService.openHeartBeatsTest();
+    }
 }

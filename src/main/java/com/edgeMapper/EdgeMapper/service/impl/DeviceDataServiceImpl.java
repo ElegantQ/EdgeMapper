@@ -105,6 +105,7 @@ public class DeviceDataServiceImpl implements DeviceDataService {
                             log.error("云端不存在此设备，或是设备名不匹配");
                         }
                         break;
+                    default:break;
                 }
             case 0x01:
                 log.info("全部设备信息={}",bytes);
@@ -139,6 +140,12 @@ public class DeviceDataServiceImpl implements DeviceDataService {
         mqttMsgService.launchOrder(order);
     }
 
+    @Override
+    public void openHeartBeatsTest() {
+        String order="68060100017016";
+        mqttMsgService.launchOrder(order);
+    }
+
     public void updateBleWatchPower() {
 
     }
@@ -147,4 +154,5 @@ public class DeviceDataServiceImpl implements DeviceDataService {
         //todo 转化成16进制
         return "B23C001C";//身高2+体重2+性别2（男：0，女：1）+年龄4:178cm+60kg+男+28岁
     }
+
 }
