@@ -94,4 +94,10 @@ public class testController {
 
         deviceDataService.openHeartBeatsTest();
     }
+    @PostMapping("/closeHeartBeatsTest")
+    @ApiOperation("关闭心率测试")
+    public void closeHeartBeatsTest(){
+
+        deviceDataService.closeHeartBeatsTest();
+    }
 }

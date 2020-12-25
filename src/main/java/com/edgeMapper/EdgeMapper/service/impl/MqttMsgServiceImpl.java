@@ -2,6 +2,7 @@ package com.edgeMapper.EdgeMapper.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.edgeMapper.EdgeMapper.config.Constants;
+import com.edgeMapper.EdgeMapper.config.MqttConfig;
 import com.edgeMapper.EdgeMapper.model.dto.*;
 import com.edgeMapper.EdgeMapper.service.DeviceDataService;
 import com.edgeMapper.EdgeMapper.service.MqttMsgService;
@@ -11,7 +12,9 @@ import org.drools.javaparser.utils.Log;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -26,12 +29,18 @@ import java.util.Set;
 public class MqttMsgServiceImpl implements MqttMsgService {
 
     @Autowired
+    private MqttConfig mqttConfig;
+
+    @Autowired
     private MqttClient mqttClient;
 
     @Autowired
     private DeviceDataService deviceDataService;
 
-
+    @Bean
+    public MqttClient defaultMqttClient() throws MqttException {
+        return new MqttClient(mqttConfig.getServer(), mqttConfig.getClientId(),new MemoryPersistence());
+    }
     @Override
     public void updateDeviceTwin(String deviceName, JsonObject data){
         String topic = Constants.DeviceETPrefix + deviceName + Constants.TwinETUpdateSuffix;
@@ -97,7 +106,8 @@ public class MqttMsgServiceImpl implements MqttMsgService {
                     this.handleBleWatchPower(data.substring(8,10));
                     break;
                 case "86"://心率、步数、里程、热量、步速
-                    this.handleHeartBeats(data.substring(4,36));
+                    this.handleHeartBeats(data.substring(10,36));
+
                 case "03":
                     break;
                 default:
@@ -120,41 +130,54 @@ public class MqttMsgServiceImpl implements MqttMsgService {
         deviceDataService.processMsg(deviceDto);
     }
     private void handleHeartBeats(String data){
-        //68 86 01 00 01 ee 16
-        String pre=data.substring(4,10);
-        if(pre.equals("010001")){
-            System.out.print("手环开启心率测试成功！！");
-        }
-        else{
-            int cur=4;
-            int heartBeats=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
-            int speed=(data.charAt(cur++)-'0')*16+data.charAt(cur)-'0';
-            int walkCounts=0,miles=0,calolis=0;
+        //68 86 01 00 01 ee 16:开启测试
+        //68 86 00 00 ee 16
+//        String pre=data.substring(0,6);
+//        if(pre.equals("0000ee")){
+//            System.out.print("手环开启心率测试成功！！");
+//        }
+//        //68 86 01 00 02 ee 16:关闭测试
+//        //68 86 00 00 ee 16
+//        else if(pre.equals("010002")){
+//            System.out.print("手环关闭心率测试成功！！");
+//        }
+//        else{
+            int heartBeats=16*(data.charAt(0)-'0')+data.charAt(1)-'0';
+            int walkCounts=0,miles=0,calolis=0,speed=0;
+            String w=reverse(data.substring(2,10));
+            String m=reverse(data.substring(10,18));
+            String c=reverse(data.substring(18,26));
             for(int i=0;i<3;i++){
                 for(int j=0;j<8;j++){
                     switch (i){
-                        case 0:walkCounts+=walkCounts*16+data.charAt(cur++)-'0';
+                        case 0:walkCounts+=walkCounts*16+w.charAt(j)-'0';
                             break;
-                        case 1:calolis+=calolis*16+data.charAt(cur++)-'0';
+                        case 1:miles+=calolis*16+m.charAt(j)-'0';
                             break;
-                        case 2:miles+=miles*16+data.charAt(cur++)-'0';
+                        case 2:calolis+=miles*16+c.charAt(j)-'0';
                             break;
                         default:break;
                     }
                 }
             }
+            speed=16*(data.charAt(26)-'0')+data.charAt(27)-'0';
             DeviceDto deviceDto = new DeviceDto();
             Map<String,String> properties = new HashMap<>();
             properties.put("heartBeats",String.valueOf(heartBeats));
             properties.put("walkCounts",String.valueOf(walkCounts));
             properties.put("miles",String.valueOf(miles));
-            properties.put("calolis",String.valueOf(calolis));
+            properties.put("calories",String.valueOf(calolis));
             properties.put("speed",String.valueOf(speed));
             deviceDto.setDeviceName("ble-watch");
             deviceDto.setProperties(properties);
             log.info("发送手环实时数据（心率、步数、里程、热量、步速）{}",deviceDto);
             deviceDataService.processMsg(deviceDto);
-        }
+//        }
 
+    }
+    private String reverse(String s){
+        String ans="";
+        ans=s.substring(6,8)+s.substring(4,6)+s.substring(2,4)+s.substring(0,2);
+        return ans;
     }
 }

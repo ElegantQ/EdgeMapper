@@ -20,4 +20,6 @@ public interface DeviceDataService {
     public void getHeartBeats();
 
     public void openHeartBeatsTest();
+
+    public void closeHeartBeatsTest();
 }

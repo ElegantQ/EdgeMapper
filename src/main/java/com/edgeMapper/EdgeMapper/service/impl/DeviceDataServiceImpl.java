@@ -28,7 +28,7 @@ import java.util.Map;
 @Slf4j
 @Service
 public class DeviceDataServiceImpl implements DeviceDataService {
-
+//
 //    @Autowired
 //    private MqttMsgService mqttService;
 
@@ -143,6 +143,12 @@ public class DeviceDataServiceImpl implements DeviceDataService {
     @Override
     public void openHeartBeatsTest() {
         String order="68060100017016";
+        mqttMsgService.launchOrder(order);
+    }
+
+    @Override
+    public void closeHeartBeatsTest() {
+        String order="68060100027116";
         mqttMsgService.launchOrder(order);
     }
 

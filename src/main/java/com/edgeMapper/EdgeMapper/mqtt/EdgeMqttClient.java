@@ -29,10 +29,10 @@ public class EdgeMqttClient {
     @Autowired
     private EdgeMqttCallback edgeMqttCallback;
 
-    @Bean
-    public MqttClient defaultMqttClient() throws MqttException {
-        return new MqttClient(mqttConfig.getServer(), mqttConfig.getClientId(),new MemoryPersistence());
-    }
+//    @Bean
+//    public MqttClient defaultMqttClient() throws MqttException {
+//        return new MqttClient(mqttConfig.getServer(), mqttConfig.getClientId(),new MemoryPersistence());
+//    }
 
     private MqttConnectOptions getOptions() {
         MqttConnectOptions options = new MqttConnectOptions();
