@@ -106,8 +106,8 @@ public class MqttMsgServiceImpl implements MqttMsgService {
                     this.handleBleWatchPower(data.substring(8,10));
                     break;
                 case "86"://心率、步数、里程、热量、步速
-                    this.handleHeartBeats(data.substring(10,36));
-
+                    this.handleHeartBeats(data.substring(10));
+                    break;
                 case "03":
                     break;
                 default:
@@ -142,36 +142,37 @@ public class MqttMsgServiceImpl implements MqttMsgService {
 //            System.out.print("手环关闭心率测试成功！！");
 //        }
 //        else{
-            int heartBeats=16*(data.charAt(0)-'0')+data.charAt(1)-'0';
-            int walkCounts=0,miles=0,calolis=0,speed=0;
-            String w=reverse(data.substring(2,10));
-            String m=reverse(data.substring(10,18));
-            String c=reverse(data.substring(18,26));
-            for(int i=0;i<3;i++){
-                for(int j=0;j<8;j++){
-                    switch (i){
-                        case 0:walkCounts+=walkCounts*16+w.charAt(j)-'0';
-                            break;
-                        case 1:miles+=calolis*16+m.charAt(j)-'0';
-                            break;
-                        case 2:calolis+=miles*16+c.charAt(j)-'0';
-                            break;
-                        default:break;
-                    }
+        log.info("valid data is {}",data);
+        int heartBeats=16*(data.charAt(0)-'0')+data.charAt(1)-'0';
+        int walkCounts=0,miles=0,calolis=0,speed=0;
+        String w=reverse(data.substring(2,10));
+        String m=reverse(data.substring(10,18));
+        String c=reverse(data.substring(18,26));
+        for(int i=0;i<3;i++){
+            for(int j=0;j<8;j++){
+                switch (i){
+                    case 0:walkCounts+=walkCounts*16+w.charAt(j)-'0';
+                        break;
+                    case 1:miles+=miles*16+m.charAt(j)-'0';
+                        break;
+                    case 2:calolis+=calolis*16+c.charAt(j)-'0';
+                        break;
+                    default:break;
                 }
             }
-            speed=16*(data.charAt(26)-'0')+data.charAt(27)-'0';
-            DeviceDto deviceDto = new DeviceDto();
-            Map<String,String> properties = new HashMap<>();
-            properties.put("heartBeats",String.valueOf(heartBeats));
-            properties.put("walkCounts",String.valueOf(walkCounts));
-            properties.put("miles",String.valueOf(miles));
-            properties.put("calories",String.valueOf(calolis));
-            properties.put("speed",String.valueOf(speed));
-            deviceDto.setDeviceName("ble-watch");
-            deviceDto.setProperties(properties);
-            log.info("发送手环实时数据（心率、步数、里程、热量、步速）{}",deviceDto);
-            deviceDataService.processMsg(deviceDto);
+        }
+        speed=16*(data.charAt(26)-'0')+data.charAt(27)-'0';
+        DeviceDto deviceDto = new DeviceDto();
+        Map<String,String> properties = new HashMap<>();
+        properties.put("heartBeats",String.valueOf(heartBeats));
+        properties.put("walkCounts",String.valueOf(walkCounts));
+        properties.put("miles",String.valueOf(miles));
+        properties.put("calories",String.valueOf(calolis));
+        properties.put("speed",String.valueOf(speed));
+        deviceDto.setDeviceName("ble-watch");
+        deviceDto.setProperties(properties);
+        log.info("发送手环实时数据（心率、步数、里程、热量、步速）{}",deviceDto);
+        deviceDataService.processMsg(deviceDto);
 //        }
 
     }
