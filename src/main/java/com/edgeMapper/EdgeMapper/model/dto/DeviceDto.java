@@ -11,5 +11,6 @@ import java.util.Map;
 @Data
 public class DeviceDto implements Serializable {
     private String deviceName;
+    private String propertyType;
     private Map<String,String> properties;
 }

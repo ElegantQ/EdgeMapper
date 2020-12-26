@@ -2,10 +2,7 @@ package com.edgeMapper.EdgeMapper.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.edgeMapper.EdgeMapper.config.GatewayConfig;
-import com.edgeMapper.EdgeMapper.model.dto.BodyInfoDto;
-import com.edgeMapper.EdgeMapper.model.dto.DeviceDataDto;
-import com.edgeMapper.EdgeMapper.model.dto.DeviceDto;
-import com.edgeMapper.EdgeMapper.model.dto.SingleDataDto;
+import com.edgeMapper.EdgeMapper.model.dto.*;
 import com.edgeMapper.EdgeMapper.service.DeviceDataService;
 import com.edgeMapper.EdgeMapper.service.MqttMsgService;
 import com.edgeMapper.EdgeMapper.util.ByteUtil;
@@ -134,6 +131,24 @@ public class DeviceDataServiceImpl implements DeviceDataService {
         mqttMsgService.launchOrder(order);
     }
 
+    private void setWalkCounts(Map<String,String> params){
+        BodyInfoDto bodyInfoDto=new BodyInfoDto();
+        for(Map.Entry<String,String> entry:params.entrySet()){
+            switch (entry.getKey()){
+                case "height":bodyInfoDto.setHeight(Integer.valueOf(entry.getValue()));
+                break;
+                case "weight":bodyInfoDto.setWeight(Integer.valueOf(entry.getValue()));
+                break;
+                case "sex":bodyInfoDto.setSex(Integer.valueOf(entry.getValue()));
+                break;
+                case "age":bodyInfoDto.setAge(Integer.valueOf(entry.getValue()));
+                break;
+                default:break;
+            }
+        }
+        setWalkCounts(bodyInfoDto);
+    }
+
     @Override
     public void getHeartBeats() {
         String order="68060100006F16";
@@ -147,6 +162,28 @@ public class DeviceDataServiceImpl implements DeviceDataService {
     }
 
     @Override
+    public void handleOrder(OrderDto orderDto) {
+        String deviceName=orderDto.getDeviceName();
+        String order=orderDto.getAction();
+        Map<String,String> params= orderDto.getParams();
+        switch (deviceName){
+            case "ble-watch":
+                switch (order){
+                    case "open heartbeats test":mqttMsgService.launchOrder("68060100017016");
+                    break;
+                    case "open fatigue test":mqttMsgService.launchOrder("680a0100017416");
+                    break;
+                    case "open blood pressure connect":mqttMsgService.launchOrder("682a040001019816");
+                    break;
+                    case "setWalkCounts":setWalkCounts(params);
+                    default:break;
+                }
+            break;
+            default:break;
+        }
+    }
+
+    @Override
     public void closeHeartBeatsTest() {
         String order="68060100027116";
         mqttMsgService.launchOrder(order);
@@ -157,8 +194,16 @@ public class DeviceDataServiceImpl implements DeviceDataService {
     }
 
     public String getBodyInfo(BodyInfoDto bodyInfoDto){
-        //todo 转化成16进制
-        return "B23C001C";//身高2+体重2+性别2（男：0，女：1）+年龄4:178cm+60kg+男+28岁
+        String ans="";
+        int heights=bodyInfoDto.getHeight();
+        int weight=bodyInfoDto.getWeight();
+        int age=bodyInfoDto.getAge();
+        ans+=String.valueOf(heights/16)+String.valueOf(heights%16);
+        ans+=String.valueOf(weight/16)+String.valueOf(weight%16);
+        ans+=bodyInfoDto.getSex()==1?"01":"00";
+        ans+=String.valueOf(age/16)+String.valueOf(age%16);
+        return ans;
+//        return "B23C001C";//身高2+体重2+性别2（男：0，女：1）+年龄4:178cm+60kg+男+28岁
     }
 
 }

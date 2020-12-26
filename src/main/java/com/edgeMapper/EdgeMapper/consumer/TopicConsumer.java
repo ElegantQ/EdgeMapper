@@ -1,5 +1,6 @@
 package com.edgeMapper.EdgeMapper.consumer;
 import com.edgeMapper.EdgeMapper.model.dto.BodyInfoDto;
+import com.edgeMapper.EdgeMapper.model.dto.OrderDto;
 import com.edgeMapper.EdgeMapper.model.mq.MqMessage;
 import com.edgeMapper.EdgeMapper.service.DeviceDataService;
 import com.edgeMapper.EdgeMapper.util.JacksonUtil;
@@ -20,16 +21,16 @@ public class TopicConsumer {
     public void handlerSendMqMsg(String body, String topicName, String tags, String keys){
         log.info("handlerSendMqMsg:body={},topicName={},tags={},keys={}",body,topicName,tags,keys);
         MqMessage.checkMessage(body, keys, topicName);
-        BodyInfoDto bodyInfoDto;
+        OrderDto orderDto;
         try {
-            bodyInfoDto = JacksonUtil.parseJson(body, BodyInfoDto.class);
+            orderDto=JacksonUtil.parseJson(body,OrderDto.class);
+            if(orderDto==null){
+                log.error("消息体为空");
+            }
+            deviceDataService.handleOrder(orderDto);
         } catch (IOException e) {
             log.error("发送短信MQ出现异常={}", e.getMessage(), e);
             throw new IllegalArgumentException("JSON转换异常", e);
         }
-        if(bodyInfoDto==null){
-            log.error("消息体为空");
-        }
-        deviceDataService.setWalkCounts(bodyInfoDto);
     }
 }
