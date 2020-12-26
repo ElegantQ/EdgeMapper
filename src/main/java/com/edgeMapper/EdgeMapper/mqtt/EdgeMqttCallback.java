@@ -50,6 +50,10 @@ public class EdgeMqttCallback implements MqttCallback {
         ) {
             mqttMsgService.transferBleGatewayData(bleGatewayDto.getContent().getData().getData());
         }
+        if(bleGatewayDto.getContent()!=null&&bleGatewayDto.getContent().getType().equals("Passthrough")&& bleGatewayDto.getContent().getData() != null
+                && bleGatewayDto.getContent().getData().getResponse().equals("Fail")){
+            mqttMsgService.reconnect();
+        }
     }
 
     @Override

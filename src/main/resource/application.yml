@@ -49,7 +49,7 @@ rocketmq:
     isOnOff: on
     groupName: device-data-consumer
     namesrvAddr: 121.36.70.254:9876
-    topics: device-data,*
+    topics: device-action,*
     consumeThreadMin: 5
     consumeThreadMax: 32
     consumeMessageBatchMaxSize: 1

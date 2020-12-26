@@ -127,12 +127,44 @@ public class DeviceDataServiceImpl implements DeviceDataService {
     @Override
     public void setWalkCounts(BodyInfoDto bodyInfoDto) {
         String bodyInfo=getBodyInfo(bodyInfoDto);
-        String order="68040400"+bodyInfo+"7A16";
+        String cs=getCS("68040400"+bodyInfo);
+        String order="68040400"+bodyInfo+cs+"16";
         mqttMsgService.launchOrder(order);
     }
-
+    private void setCallDelayTime(Map<String,String> params){
+        if(params==null)return;
+        if(params.containsKey("delayTime")){
+            String time=Integer.valueOf(params.get("delayTime"))/16+""+Integer.valueOf(params.get("delayTime"))%16;
+            String cs=getCS("68120200"+time+"01");
+            String oreder="68120200"+time+"01"+cs+"16";
+            mqttMsgService.launchOrder(oreder);
+        }
+    }
+    //获取校验码
+    private String getCS(String s){
+        if(s.length()%2==1||s.length()<2){
+            log.error("输入字符串长度有误");
+            return "";
+        }
+        int carry=0;
+        StringBuffer ans=new StringBuffer();
+        for(int i=0;i<s.length();i+=2){
+            if(ans.length()==0){
+                ans.append(s.substring(0,2));
+            }
+            else{
+                int sum1=ans.charAt(1)-'0'+s.charAt(i+1)-'0';
+                carry=sum1/16;
+                ans.setCharAt(1,(char)(sum1%16+'0'));
+                int sum2=ans.charAt(0)-'0'+s.charAt(i)-'0'+carry;
+                ans.setCharAt(0,(char)(sum2%16+'0'));
+            }
+        }
+        return ans.toString();
+    }
     private void setWalkCounts(Map<String,String> params){
         BodyInfoDto bodyInfoDto=new BodyInfoDto();
+        if(params==null)return;
         for(Map.Entry<String,String> entry:params.entrySet()){
             switch (entry.getKey()){
                 case "height":bodyInfoDto.setHeight(Integer.valueOf(entry.getValue()));
@@ -168,15 +200,18 @@ public class DeviceDataServiceImpl implements DeviceDataService {
         Map<String,String> params= orderDto.getParams();
         switch (deviceName){
             case "ble-watch":
-                switch (order){
-                    case "open heartbeats test":mqttMsgService.launchOrder("68060100017016");
-                    break;
-                    case "open fatigue test":mqttMsgService.launchOrder("680a0100017416");
-                    break;
-                    case "open blood pressure connect":mqttMsgService.launchOrder("682a040001019816");
-                    break;
-                    case "setWalkCounts":setWalkCounts(params);
-                    default:break;
+                if(order!=null){
+                    switch (order){
+                        case "openHeartBeatsTest":mqttMsgService.launchOrder("68060100017016");
+                            break;
+                        case "openFatigueTest":mqttMsgService.launchOrder("680a0100017416");
+                            break;
+                        case "open blood pressure connect":mqttMsgService.launchOrder("682a040001019816");
+                            break;
+                        case "setCallDelayTime":setCallDelayTime(params);
+                        case "setWalkCounts":setWalkCounts(params);
+                        default:break;
+                    }
                 }
             break;
             default:break;
@@ -189,6 +224,12 @@ public class DeviceDataServiceImpl implements DeviceDataService {
         mqttMsgService.launchOrder(order);
     }
 
+    @Override
+    public void getVersion() {
+        String order="680700006F16";
+        mqttMsgService.launchOrder(order);
+    }
+
     public void updateBleWatchPower() {
 
     }
@@ -198,10 +239,10 @@ public class DeviceDataServiceImpl implements DeviceDataService {
         int heights=bodyInfoDto.getHeight();
         int weight=bodyInfoDto.getWeight();
         int age=bodyInfoDto.getAge();
-        ans+=String.valueOf(heights/16)+String.valueOf(heights%16);
-        ans+=String.valueOf(weight/16)+String.valueOf(weight%16);
+        ans+=heights/16+""+heights%16;
+        ans+=weight/16+""+weight%16;
         ans+=bodyInfoDto.getSex()==1?"01":"00";
-        ans+=String.valueOf(age/16)+String.valueOf(age%16);
+        ans+=age/16+""+age%16;
         return ans;
 //        return "B23C001C";//身高2+体重2+性别2（男：0，女：1）+年龄4:178cm+60kg+男+28岁
     }

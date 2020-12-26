@@ -25,4 +25,6 @@ public interface DeviceDataService {
     public void handleOrder(OrderDto orderDto);
 
     public void closeHeartBeatsTest();
+
+    public void getVersion();
 }

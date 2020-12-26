@@ -108,6 +108,9 @@ public class MqttMsgServiceImpl implements MqttMsgService {
                 case "86"://心率、步数、里程、热量、步速
                     this.handleHeartBeats(data.substring(10));
                     break;
+                case "87"://版本号
+                    this.handleVersion(data.substring(8,16));
+                    break;
                 case "03":
                     break;
                 default:
@@ -116,6 +119,29 @@ public class MqttMsgServiceImpl implements MqttMsgService {
         }
     }
 
+    @Override
+    public void reconnect() {
+
+    }
+
+    private void handleVersion(String data){
+        int cur=0;
+        int deviceLow=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
+        int deviceHigh=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
+        int bluetoothVersion=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
+        int deviceVersion=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
+        DeviceDto deviceDto = new DeviceDto();
+        Map<String,String> properties = new HashMap<>();
+        properties.put("deviceLow",String.valueOf(deviceLow));
+        properties.put("deviceHigh",String.valueOf(deviceHigh));
+        properties.put("bluetoothVersion",String.valueOf(bluetoothVersion));
+        properties.put("deviceVersion",String.valueOf(deviceVersion));
+        deviceDto.setDeviceName("ble-watch");
+        deviceDto.setPropertyType("deviceInfo");
+        deviceDto.setProperties(properties);
+        log.info("发送手环设备标识、蓝牙版本、设备版本{}",deviceDto);
+        deviceDataService.processMsg(deviceDto);
+    }
     private void handleBleWatchPower(String data) {
         int power = 0;
         for (int i=0;i<data.length();i++) {
