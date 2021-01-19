@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -28,18 +29,25 @@ import java.util.Set;
 @Service
 public class MqttMsgServiceImpl implements MqttMsgService {
 
-    @Autowired
+    @Resource
     private MqttConfig mqttConfig;
 
-    @Autowired
+    @Resource(name = "MqttClient")
     private MqttClient mqttClient;
+
+    @Resource(name = "TbMqttClient")
+    private MqttClient tbMqttClient;
 
     @Autowired
     private DeviceDataService deviceDataService;
 
-    @Bean
+    @Bean(value = "MqttClient")
     public MqttClient defaultMqttClient() throws MqttException {
         return new MqttClient(mqttConfig.getServer(), mqttConfig.getClientId(),new MemoryPersistence());
+    }
+    @Bean(value="TbMqttClient")
+    public MqttClient defaultTbMqttClient() throws MqttException {
+        return new MqttClient(mqttConfig.getTbServer(), mqttConfig.getClientId(),new MemoryPersistence());
     }
     @Override
     public void updateDeviceTwin(String deviceName, JsonObject data){
@@ -111,6 +119,7 @@ public class MqttMsgServiceImpl implements MqttMsgService {
                 case "87"://版本号
                     this.handleVersion(data.substring(8,16));
                     break;
+
                 case "03":
                     break;
                 default:
@@ -121,7 +130,39 @@ public class MqttMsgServiceImpl implements MqttMsgService {
 
     @Override
     public void reconnect() {
+        String topic = "sys/8cd4950007da/cloud";
+        BleDto bleDto = new BleDto();
+        BleGatewayDto bleGatewayDto = new BleGatewayDto();
+        BleGatewayContentDto bleGatewayContentDto = new BleGatewayContentDto();
+        BleGatewayDataDto bleGatewayDataDto = new BleGatewayDataDto();
+        bleGatewayDto.setType("Down");
+        bleGatewayContentDto.setType("ConnectDeviceLong");
+        bleGatewayDataDto.setData("");
+        bleGatewayDataDto.setMac("EF3AEDFA337C");
+        bleGatewayContentDto.setData(bleGatewayDataDto);
+        bleGatewayDto.setContent(bleGatewayContentDto);
+        bleDto.setComType(bleGatewayDto);
+        String msgBody = JSON.toJSONString(bleDto);
+        MqttMessage msg = new MqttMessage(msgBody.getBytes());
+        log.info("向网关发送指令{}", msgBody);
+        try {
+            mqttClient.publish(topic,msg);
+        } catch (Exception e) {
+            Log.error("指令发送异常");
+        }
+    }
 
+    @Override
+    public void pushDataToTb(DeviceDto deviceDto) {
+        String msgBody=JSON.toJSONString(deviceDto.getProperties());
+        MqttMessage msg=new MqttMessage(msgBody.getBytes());
+        log.info("向Thingsboard发送手环数据{}",msgBody);
+        String topic=Constants.TbTelemetryTopic;
+        try{
+            tbMqttClient.publish(topic,msg);
+        }catch (Exception e){
+            log.error("向thingsboard推数据发生异常");
+        }
     }
 
     private void handleVersion(String data){

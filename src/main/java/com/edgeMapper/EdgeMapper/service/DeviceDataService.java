@@ -27,4 +27,6 @@ public interface DeviceDataService {
     public void closeHeartBeatsTest();
 
     public void getVersion();
+
+    public void getWeatherParams();
 }

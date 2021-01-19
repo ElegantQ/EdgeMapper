@@ -1,5 +1,6 @@
 package com.edgeMapper.EdgeMapper.service;
 
+import com.edgeMapper.EdgeMapper.model.dto.DeviceDto;
 import com.google.gson.JsonObject;
 
 /**
@@ -13,4 +14,6 @@ public interface MqttMsgService {
     public void transferBleGatewayData(String data);
 
     public void reconnect();
+
+    public void pushDataToTb(DeviceDto deviceDto);
 }

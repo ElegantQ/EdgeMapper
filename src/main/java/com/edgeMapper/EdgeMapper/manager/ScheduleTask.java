@@ -34,5 +34,6 @@ public class ScheduleTask {
         System.out.print("向手环发送获取实时体征数据请求");
         deviceDataService.getHeartBeats();//获取实时心率数据
         deviceDataService.getVersion();//获取版本号
+        deviceDataService.getWeatherParams();//查询天气
     }
 }

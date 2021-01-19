@@ -15,6 +15,8 @@ public class MqttConfig {
 
     private String server;
 
+    private String tbServer;
+
     private String internalServer;
 
     private String clientId;

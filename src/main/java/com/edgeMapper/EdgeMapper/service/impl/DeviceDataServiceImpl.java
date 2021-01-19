@@ -14,10 +14,7 @@ import org.apache.rocketmq.common.message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by huqiaoqian on 2020/9/23
@@ -45,6 +42,7 @@ public class DeviceDataServiceImpl implements DeviceDataService {
             for(Map.Entry<String ,String> entry:deviceDto.getProperties().entrySet()){
                 data.addProperty(entry.getKey(),entry.getValue());
             }
+            mqttMsgService.pushDataToTb(deviceDto);
             Message msg = new Message("device-data", JSONObject.toJSONString(deviceDto).getBytes());
             producer.send(msg);
 //            mqttService.updateDeviceTwin(deviceDto.getDeviceName(), data);
@@ -146,6 +144,10 @@ public class DeviceDataServiceImpl implements DeviceDataService {
             log.error("输入字符串长度有误");
             return "";
         }
+        Map<Integer,Character> map=new HashMap<>();
+        for(int i=0;i<=5;i++){
+            map.put(10+i,(char)('A'+i));
+        }
         int carry=0;
         StringBuffer ans=new StringBuffer();
         for(int i=0;i<s.length();i+=2){
@@ -155,9 +157,9 @@ public class DeviceDataServiceImpl implements DeviceDataService {
             else{
                 int sum1=ans.charAt(1)-'0'+s.charAt(i+1)-'0';
                 carry=sum1/16;
-                ans.setCharAt(1,(char)(sum1%16+'0'));
+                ans.setCharAt(1,sum1%16>=10?map.get(sum1%16):(char)(sum1%16+'0'));
                 int sum2=ans.charAt(0)-'0'+s.charAt(i)-'0'+carry;
-                ans.setCharAt(0,(char)(sum2%16+'0'));
+                ans.setCharAt(0,sum2%16>=10?map.get(sum2%16):(char)(sum2%16+'0'));
             }
         }
         return ans.toString();
@@ -208,7 +210,7 @@ public class DeviceDataServiceImpl implements DeviceDataService {
                             break;
                         case "open blood pressure connect":mqttMsgService.launchOrder("682a040001019816");
                             break;
-                        case "setCallDelayTime":setCallDelayTime(params);
+                        case "setCallDelayTime":setCallDelayTime(params);//设置提醒延时时间
                         case "setWalkCounts":setWalkCounts(params);
                         default:break;
                     }
@@ -230,20 +232,25 @@ public class DeviceDataServiceImpl implements DeviceDataService {
         mqttMsgService.launchOrder(order);
     }
 
-    public void updateBleWatchPower() {
-
+    @Override
+    public void getWeatherParams() {
+        //todo ...
     }
 
-    public String getBodyInfo(BodyInfoDto bodyInfoDto){
+    private String getBodyInfo(BodyInfoDto bodyInfoDto){
         String ans="";
+        Map<Integer,Character> map=new HashMap<>();
+        for(int i=0;i<=5;i++){
+            map.put(10+i,(char)('A'+i));
+        }
         int heights=bodyInfoDto.getHeight();
         int weight=bodyInfoDto.getWeight();
         int age=bodyInfoDto.getAge();
-        ans+=heights/16+""+heights%16;
-        ans+=weight/16+""+weight%16;
+        ans+=(heights/16>=10?map.get(heights/16):heights/16)+""+(heights%16>=10?map.get(heights%16):heights%16);
+        ans+=(weight/16>=10?map.get(weight/16):weight/16)+""+(weight%16>=10?map.get(weight%16):weight%16);
         ans+=bodyInfoDto.getSex()==1?"01":"00";
         ans+=age/16+""+age%16;
-        return ans;
+        return ans+"00";
 //        return "B23C001C";//身高2+体重2+性别2（男：0，女：1）+年龄4:178cm+60kg+男+28岁
     }
 
