@@ -3,8 +3,8 @@ server:
 
 mqtt:
   mode: 0
-  server: tcp://121.36.70.254:1883
-  tb-server: tcp://127.0.0.1:1883
+  server: tcp://182.92.222.53:1883
+  tb-server: tcp://182.92.222.53:1883
 #  internal-server: tcp://172.17.74.195:1884
   client-id: eventbus7
   cleanSession: true
@@ -49,7 +49,7 @@ rocketmq:
   consumer:
     isOnOff: on
     groupName: device-data-consumer
-    namesrvAddr: 121.36.70.254:9876
+    namesrvAddr: elegant-cavy.xyz/rocketmq
     topics: device-action,*
     consumeThreadMin: 5
     consumeThreadMax: 32
@@ -57,7 +57,7 @@ rocketmq:
   producer:
     isOnOff: on
     groupName: device-data-producer
-    namesrvAddr: 121.36.70.254:9876
+    namesrvAddr: elegant-cavy.xyz/rocketmq
     maxMessageSize: 4096
     sendMsgTimeOut: 3000
     retryTimesWhenSendFailed: 2
