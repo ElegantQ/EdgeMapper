@@ -3,14 +3,15 @@ package com.edgeMapper.EdgeMapper.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.edgeMapper.EdgeMapper.config.GatewayConfig;
 import com.edgeMapper.EdgeMapper.model.dto.*;
+import com.edgeMapper.EdgeMapper.mqtt.EdgeMqttManager;
 import com.edgeMapper.EdgeMapper.service.DeviceDataService;
 import com.edgeMapper.EdgeMapper.service.MqttMsgService;
 import com.edgeMapper.EdgeMapper.util.ByteUtil;
 import com.edgeMapper.EdgeMapper.util.GatewayUtil;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.message.Message;
+import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,8 +27,8 @@ public class DeviceDataServiceImpl implements DeviceDataService {
 //    @Autowired
 //    private MqttMsgService mqttService;
 
-    @Autowired
-    private DefaultMQProducer producer;
+//    @Autowired
+//    private DefaultMQProducer producer;
 
     @Autowired
     private GatewayConfig gatewayConfig;
@@ -36,15 +37,20 @@ public class DeviceDataServiceImpl implements DeviceDataService {
     private MqttMsgService mqttMsgService;
 
     @Override
-    public void processMsg(DeviceDto deviceDto) {
+    public void processMsg(DeviceDto deviceDto, String deviceId) {
         try{
             JsonObject data = new JsonObject();
             for(Map.Entry<String ,String> entry:deviceDto.getProperties().entrySet()){
                 data.addProperty(entry.getKey(),entry.getValue());
             }
-            mqttMsgService.pushDataToTb(deviceDto);
+            MqttClient tbMqttClient = EdgeMqttManager.getClient(deviceId);
+            if (tbMqttClient == null) {
+                log.info("tbMqttClient {} can't be found!", deviceId);
+                return;
+            }
+            mqttMsgService.pushDataToTb(deviceDto, tbMqttClient);
             Message msg = new Message("device-data", JSONObject.toJSONString(deviceDto).getBytes());
-            producer.send(msg);
+            //producer.send(msg);
 //            mqttService.updateDeviceTwin(deviceDto.getDeviceName(), data);
         }
         catch (Exception e){
@@ -88,7 +94,7 @@ public class DeviceDataServiceImpl implements DeviceDataService {
                             log.info("设备数据为{}",deviceDataDto);
                             try {
                                 Message msg = new Message("device-data", JSONObject.toJSONString(deviceDataDto).getBytes());
-                                producer.send(msg);
+//                                producer.send(msg);
                             } catch (Exception e) {
                                 log.error("推送mq实时数据异常",e);
                             }

@@ -33,7 +33,7 @@ public class testController {
     @ApiOperation(value = "给mapper传送数据")
     @PostMapping("data")
     public void mockData(@RequestBody DeviceDto deviceDto){
-        deviceDataService.processMsg(deviceDto);
+        deviceDataService.processMsg(deviceDto,"");
     }
 
     /**

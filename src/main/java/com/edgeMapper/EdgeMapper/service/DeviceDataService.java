@@ -8,7 +8,7 @@ import com.edgeMapper.EdgeMapper.model.dto.OrderDto;
  * Created by huqiaoqian on 2020/9/23
  */
 public interface DeviceDataService {
-    public void processMsg(DeviceDto deviceDto);
+    public void processMsg(DeviceDto deviceDto, String deviceId);
 
     public void processMsg(byte[] bytes);
 

@@ -12,9 +12,7 @@ import org.drools.javaparser.utils.Log;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -32,23 +30,12 @@ public class MqttMsgServiceImpl implements MqttMsgService {
     @Resource
     private MqttConfig mqttConfig;
 
-    @Resource(name = "MqttClient")
+    @Resource
     private MqttClient mqttClient;
-
-    @Resource(name = "TbMqttClient")
-    private MqttClient tbMqttClient;
 
     @Autowired
     private DeviceDataService deviceDataService;
 
-    @Bean(value = "MqttClient")
-    public MqttClient defaultMqttClient() throws MqttException {
-        return new MqttClient(mqttConfig.getServer(), mqttConfig.getClientId(),new MemoryPersistence());
-    }
-    @Bean(value="TbMqttClient")
-    public MqttClient defaultTbMqttClient() throws MqttException {
-        return new MqttClient(mqttConfig.getTbServer(), mqttConfig.getClientId(),new MemoryPersistence());
-    }
     @Override
     public void updateDeviceTwin(String deviceName, JsonObject data){
         String topic = Constants.DeviceETPrefix + deviceName + Constants.TwinETUpdateSuffix;
@@ -105,19 +92,19 @@ public class MqttMsgServiceImpl implements MqttMsgService {
     }
 
     @Override
-    public void transferBleGatewayData(String data) {
+    public void transferBleGatewayData(String data, String clientId) {
         if (data.substring(0,2).equals("68")) {
             //有效数据包
             String cmd = data.substring(2,4);
             switch (cmd) {
                 case "83"://手环电量
-                    this.handleBleWatchPower(data.substring(8,10));
+                    this.handleBleWatchPower(data.substring(8,10), clientId);
                     break;
                 case "86"://心率、步数、里程、热量、步速
-                    this.handleHeartBeats(data.substring(10));
+                    this.handleHeartBeats(data.substring(10), clientId);
                     break;
                 case "87"://版本号
-                    this.handleVersion(data.substring(8,16));
+                    this.handleVersion(data.substring(8,16), clientId);
                     break;
 
                 case "03":
@@ -153,7 +140,7 @@ public class MqttMsgServiceImpl implements MqttMsgService {
     }
 
     @Override
-    public void pushDataToTb(DeviceDto deviceDto) {
+    public void pushDataToTb(DeviceDto deviceDto, MqttClient tbMqttClient) {
         String msgBody=JSON.toJSONString(deviceDto.getProperties());
         MqttMessage msg=new MqttMessage(msgBody.getBytes());
         log.info("向Thingsboard发送手环数据{}",msgBody);
@@ -165,7 +152,7 @@ public class MqttMsgServiceImpl implements MqttMsgService {
         }
     }
 
-    private void handleVersion(String data){
+    private void handleVersion(String data, String deviceId){
         int cur=0;
         int deviceLow=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
         int deviceHigh=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
@@ -181,9 +168,9 @@ public class MqttMsgServiceImpl implements MqttMsgService {
         deviceDto.setPropertyType("deviceInfo");
         deviceDto.setProperties(properties);
         log.info("发送手环设备标识、蓝牙版本、设备版本{}",deviceDto);
-        deviceDataService.processMsg(deviceDto);
+        deviceDataService.processMsg(deviceDto, deviceId);
     }
-    private void handleBleWatchPower(String data) {
+    private void handleBleWatchPower(String data, String deviceId) {
         int power = 0;
         for (int i=0;i<data.length();i++) {
             power+=(power*16+(data.charAt(i)-'0'));
@@ -194,9 +181,9 @@ public class MqttMsgServiceImpl implements MqttMsgService {
         deviceDto.setDeviceName("ble-watch");
         deviceDto.setProperties(properties);
         log.info("发送手环电量数据{}",deviceDto);
-        deviceDataService.processMsg(deviceDto);
+        deviceDataService.processMsg(deviceDto, deviceId);
     }
-    private void handleHeartBeats(String data){
+    private void handleHeartBeats(String data, String deviceId){
         //68 86 01 00 01 ee 16:开启测试
         //68 86 00 00 ee 16
 //        String pre=data.substring(0,6);
@@ -239,7 +226,7 @@ public class MqttMsgServiceImpl implements MqttMsgService {
         deviceDto.setDeviceName("ble-watch");
         deviceDto.setProperties(properties);
         log.info("发送手环实时数据（心率、步数、里程、热量、步速）{}",deviceDto);
-        deviceDataService.processMsg(deviceDto);
+        deviceDataService.processMsg(deviceDto, deviceId);
 //        }
 
     }

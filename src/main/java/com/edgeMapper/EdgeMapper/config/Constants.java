@@ -18,7 +18,7 @@ public class Constants {
 
     public static String BleGateWayTopic = "sys/cloud/8cd4950007da";
 
-    public static String TbTelemetryTopic ="v1/devices/me/attributes";
+    public static String TbTelemetryTopic ="v1/devices/me/telemetry";
 
-    public static String BleWatchToken = "SsKpPQ1pQynGcwnKRSZJ";
+    public static String BleWatchToken = "ler8EtBDnnCdq6BWP7fB";
 }
