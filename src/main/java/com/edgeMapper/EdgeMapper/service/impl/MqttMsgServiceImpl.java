@@ -152,6 +152,11 @@ public class MqttMsgServiceImpl implements MqttMsgService {
         }
     }
 
+    @Override
+    public void OrderApp(String order) {
+
+    }
+
     private void handleVersion(String data, String deviceId){
         int cur=0;
         int deviceLow=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';

@@ -17,4 +17,6 @@ public interface MqttMsgService {
     public void reconnect();
 
     public void pushDataToTb(DeviceDto deviceDto, MqttClient tbMqttClient);
+
+    public void OrderApp(String order);
 }
