@@ -158,11 +158,16 @@ public class MqttMsgServiceImpl implements MqttMsgService {
     }
 
     private void handleVersion(String data, String deviceId){
-        int cur=0;
-        int deviceLow=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
-        int deviceHigh=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
-        int bluetoothVersion=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
-        int deviceVersion=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
+        int deviceLow=convertToDecimal(data.substring(0,2)),
+            deviceHigh=convertToDecimal(data.substring(2,4)),
+            bluetoothVersion=convertToDecimal(data.substring(4,6)),
+            deviceVersion=convertToDecimal(data.substring(6,8));
+
+//        int cur=0;
+//        int deviceLow=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
+//        int deviceHigh=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
+//        int bluetoothVersion=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
+//        int deviceVersion=16*(data.charAt(cur++)-'0')+data.charAt(cur++)-'0';
         DeviceDto deviceDto = new DeviceDto();
         Map<String,String> properties = new HashMap<>();
         properties.put("deviceLow",String.valueOf(deviceLow));
@@ -176,10 +181,7 @@ public class MqttMsgServiceImpl implements MqttMsgService {
         deviceDataService.processMsg(deviceDto, deviceId);
     }
     private void handleBleWatchPower(String data, String deviceId) {
-        int power = 0;
-        for (int i=0;i<data.length();i++) {
-            power+=(power*16+(data.charAt(i)-'0'));
-        }
+        int power = convertToDecimal(data);
         DeviceDto deviceDto = new DeviceDto();
         Map<String,String> properties = new HashMap<>();
         properties.put("power",String.valueOf(power));
@@ -202,25 +204,28 @@ public class MqttMsgServiceImpl implements MqttMsgService {
 //        }
 //        else{
         log.info("valid data is {}",data);
-        int heartBeats=16*(data.charAt(0)-'0')+data.charAt(1)-'0';
-        int walkCounts=0,miles=0,calolis=0,speed=0;
-        String w=reverse(data.substring(2,10));
-        String m=reverse(data.substring(10,18));
-        String c=reverse(data.substring(18,26));
-        for(int i=0;i<3;i++){
-            for(int j=0;j<8;j++){
-                switch (i){
-                    case 0:walkCounts+=walkCounts*16+w.charAt(j)-'0';
-                        break;
-                    case 1:miles+=miles*16+m.charAt(j)-'0';
-                        break;
-                    case 2:calolis+=calolis*16+c.charAt(j)-'0';
-                        break;
-                    default:break;
-                }
-            }
-        }
-        speed=16*(data.charAt(26)-'0')+data.charAt(27)-'0';
+        int heartBeats=convertToDecimal(data.substring(0,2)),
+            walkCounts=convertToDecimal(reverse(data.substring(2,10))),
+            miles=convertToDecimal(reverse(data.substring(10,18))),
+            calolis=convertToDecimal(reverse(data.substring(18,26))),
+            speed=convertToDecimal(data.substring(27,28));
+//        String w=reverse(data.substring(2,10));
+//        String m=reverse(data.substring(10,18));
+//        String c=reverse(data.substring(18,26));
+//        for(int i=0;i<3;i++){
+//            for(int j=0;j<8;j++){
+//                switch (i){
+//                    case 0:walkCounts+=walkCounts*16+w.charAt(j)-'0';
+//                        break;
+//                    case 1:miles+=miles*16+m.charAt(j)-'0';
+//                        break;
+//                    case 2:calolis+=calolis*16+c.charAt(j)-'0';
+//                        break;
+//                    default:break;
+//                }
+//            }
+//        }
+//        speed=16*(data.charAt(26)-'0')+data.charAt(27)-'0';
         DeviceDto deviceDto = new DeviceDto();
         Map<String,String> properties = new HashMap<>();
         properties.put("heartBeats",String.valueOf(heartBeats));
@@ -239,5 +244,18 @@ public class MqttMsgServiceImpl implements MqttMsgService {
         String ans="";
         ans=s.substring(6,8)+s.substring(4,6)+s.substring(2,4)+s.substring(0,2);
         return ans;
+    }
+
+    private int convertToDecimal(String data){
+        int target = 0;
+        for (int i=0;i<data.length();i++) {
+            if(data.charAt(i)>='0'&&data.charAt(i)<='9'){
+                target=(target*16+(data.charAt(i)-'0'));
+            }
+            else{
+                target=(target*16+(data.charAt(i)-'A'+10));
+            }
+        }
+        return target;
     }
 }

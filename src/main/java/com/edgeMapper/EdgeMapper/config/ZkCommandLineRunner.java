@@ -35,16 +35,13 @@ public class ZkCommandLineRunner implements CommandLineRunner {
         CuratorFramework client = CuratorFrameworkFactory.newClient(zkConfig.getServer(),
                 5000,1000,retryPolicy);
         client.start();
-        runDevice(zkConfig.getNode(), client);
+        runDevice(zkConfig.getNode() + "/device", client);
         runApp(zkConfig.getNode()+"/app", client);
     }
 
     public void runDevice(String path, CuratorFramework client) throws Exception {
         List<String> childrenKeys = client.getChildren().forPath(path);
         for (String childrenKey : childrenKeys) {
-            if (childrenKey.equals("app")) {
-                continue;
-            }
             String deviceToken = new String(client.getData().forPath(path + "/" + childrenKey), Charsets.UTF_8);
             log.info("child device is {}, token is {}",childrenKey, deviceToken);
             EdgeMqttManager.addClient(childrenKey,deviceToken, mqttConfig.getTbServer());
@@ -66,6 +63,9 @@ public class ZkCommandLineRunner implements CommandLineRunner {
                     case CHILD_ADDED:
                         log.info("CHILD_ADDED path={}, data={}",path,dataStr);
                         String[] strings = path.split("/");
+                        if(strings.length == 3){
+                            break;
+                        }
                         String deviceID = strings[strings.length-1];
                         EdgeMqttManager.addClient(deviceID, dataStr, mqttConfig.getTbServer());
                         break;
